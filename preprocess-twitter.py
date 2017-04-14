@@ -11,9 +11,8 @@ Translation of Ruby script to create features for GloVe vectors for Twitter data
 http://nlp.stanford.edu/projects/glove/preprocess-twitter.rb
 """
 
-import sys
-import regex as re
-
+# import re  # for python2
+import regex as re  # for python 3
 FLAGS = re.MULTILINE | re.DOTALL
 
 def hashtag(text):
