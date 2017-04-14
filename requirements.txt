@@ -1,0 +1,5 @@
+regex
+gensim
+sklearn
+numpy
+tensorflow-gpu==0.12.1
