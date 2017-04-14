@@ -12,7 +12,7 @@ http://nlp.stanford.edu/projects/glove/preprocess-twitter.rb
 """
 
 import sys
-import re
+import regex as re
 
 FLAGS = re.MULTILINE | re.DOTALL
 
