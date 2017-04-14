@@ -6,7 +6,7 @@ import sklearn.metrics as sm
 import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.ensemble import RandomForestClassifier
-data_path = 'DataProcessingForNB'
+data_path = 'data'
 data_path1 = '3100DB'
 
 

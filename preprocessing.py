@@ -4,7 +4,7 @@ import random
 from random import shuffle
 import pickle
 
-data_path = 'DataProcessingForNB'
+data_path = 'data'
 label_file = os.path.join(data_path, 'integer_labels.csv')
 
 
