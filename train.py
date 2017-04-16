@@ -156,9 +156,6 @@ def train_cnn_rnn():
 
                 # Evaluate the model with x_dev and y_dev
                 if current_step % params['evaluate_every'] == 0:
-
-
-
                     print("Evaluation:", end=' ')
                     _ = dev_step(x_dev, y_dev)
                     print("Test:", end=' ')
