@@ -28,12 +28,10 @@ def allcaps(text):
     text = text.group()
     return text.lower() + " <allcaps>"
 
-
 def twitter_tokenize(text):
     # Different regex parts for smiley faces
     eyes = r"[8:=;]"
     nose = r"['`\-]?"
-
     # function so code less repetitive
     def re_sub(pattern, repl):
         return re.sub(pattern, repl, text, flags=FLAGS)
@@ -54,7 +52,6 @@ def twitter_tokenize(text):
     ## -- I just don't understand why the Ruby script adds <allcaps> to everything so I limited the selection.
     # text = re_sub(r"([^a-z0-9()<>'`\-]){2,}", allcaps)
     text = re_sub(r"([A-Z]){2,}", allcaps)
-
     return text.lower()
 
 
