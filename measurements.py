@@ -9,14 +9,14 @@ import numpy as np
 
 
 def CalculateFM(preLabels, targetLabels):
-    print('PreLabels:', preLabels)
-    print('targetLabels:', targetLabels)
+    # print('PreLabels:', preLabels)
+    # print('targetLabels:', targetLabels)
 
     Pre_Labels = np.array(preLabels)
     Test_Target = np.array(targetLabels)
 
-    print('Array of Pre_Labels:', Pre_Labels)
-    print('Array of Test_Target:', Test_Target)
+    # print('Array of Pre_Labels:', Pre_Labels)
+    # print('Array of Test_Target:', Test_Target)
 
     temp = Pre_Labels + Test_Target
 
@@ -81,14 +81,15 @@ def CalculateFM(preLabels, targetLabels):
     return {'MacroFM': Macro_Fmeasure, 'MicroFM': Micro_Fmeasure, 'ExamFM': Exam_Fmeasure}
 
 
-preLabels = [[-1, -1, 1, -1, -1, 1, -1, -1, -1],
+if __name__ == '__main__':
+    preLabels = [[-1, -1, 1, -1, -1, 1, -1, -1, -1],
              [-1, -1, -1, 1, 1, -1, -1, -1, -1],
              [-1, -1, -1, 1, -1, 1, -1, -1, -1]]
 
-targetLabels = [[-1, -1, 1, 1, -1, -1, -1, -1, -1],
+    targetLabels = [[-1, -1, 1, 1, -1, -1, -1, -1, -1],
                 [1, -1, -1, -1, 1, -1, -1, -1, -1],
                 [-1, -1, 1, 1, -1, -1, -1, -1, -1]]
 
-results = CalculateFM(preLabels, targetLabels)
+    results = CalculateFM(preLabels, targetLabels)
 
-print('Results:', results)
+    print('Results:', results)
