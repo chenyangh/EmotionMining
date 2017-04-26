@@ -14,11 +14,11 @@ def meass(y_true, y_pred):
     m, n = y_pred.shape
 
 
-class NaiveClassifier:
+class OneClassifier:
     def __init__(self, num):
         self.model = MultinomialNB()
         #self.model = SGDClassifier(loss='log', penalty='l2', alpha=1e-3, n_iter=5, random_state=42, n_jobs=12)
-        #self.model = RandomForestClassifier(n_estimators=300, n_jobs=12, criterion='entropy')
+        # self.model = RandomForestClassifier(n_estimators=300, n_jobs=12, criterion='entropy')
         self.num = num
 
     def gen_label(self, label):
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     # ##Train model
     list_classifiers = []
     for i in range(num_classes):
-        new_classifier = NaiveClassifier(i)
+        new_classifier = OneClassifier(i)
         print('Training', str(i), 'th classifier...')
         new_classifier.fit(train_data, train_label, is_balanced=True)
         list_classifiers.append(new_classifier)

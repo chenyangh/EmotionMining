@@ -8,11 +8,21 @@ See the function call
 import numpy as np
 
 
-def CalculateFM(preLabels, targetLabels):
+def CalculateFM(preLabels, targetLabels, threshold=None):
     # print('PreLabels:', preLabels)
     # print('targetLabels:', targetLabels)
+    # threshold = 0.5
 
-    Pre_Labels = np.array(preLabels)
+    def softmax(x):
+        """Compute softmax values for each sets of scores in x."""
+        e_x = np.exp(x - np.max(x))
+        return e_x / e_x.sum()
+
+    if threshold is not None:
+        new_pred = [1 & (softmax(v) > threshold) for v in preLabels]
+        Pre_Labels = np.array(new_pred)
+    else:
+        Pre_Labels = np.array(preLabels)
     Test_Target = np.array(targetLabels)
 
     # print('Array of Pre_Labels:', Pre_Labels)

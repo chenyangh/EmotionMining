@@ -9,21 +9,23 @@ import data_helper
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from text_cnn_rnn import TextCNNRNN, TextRNN, TextCNN, TextCNNRNN2
+from text_cnn_rnn import TextCNNRNN, TextRNN, TextCNN, TextBiRNN, TextCNNBiRNN
 from sklearn.model_selection import train_test_split
 import datetime
 import pickle
+from measurements import CalculateFM
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 def train_cnn_rnn():
-    x_, y_, x_test, y_test, vocabulary, vocabulary_inv, labels = data_helper.load_data()
+    x_, y_, vocabulary, vocabulary_inv, labels = data_helper.load_data()
 
     training_config = 'training_config.json'
     params = json.loads(open(training_config).read())
-
+    embedding_option = params['embedding']
+    emb_dim = params['embedding_dim']
     # Assign a 300 dimension vector to each word
-    word_embeddings = data_helper.load_embeddings(vocabulary)
+    word_embeddings = data_helper.load_embeddings(vocabulary, embedding_option, emb_dim)
     embedding_mat = []
     for i in range(len(vocabulary_inv)):
         embedding_mat.append(word_embeddings[vocabulary_inv[i]])
@@ -32,6 +34,7 @@ def train_cnn_rnn():
     # Split the original dataset into train set and test set
 
     # Split the train set into train set and dev set
+    x_, x_test, y_, y_test = train_test_split(x_, y_, test_size=0.1)
     x_train, x_dev, y_train, y_dev = train_test_split(x_, y_, test_size=0.1)
 
     # Create a directory, everything related to the training will be saved in this directory
@@ -47,7 +50,7 @@ def train_cnn_rnn():
         sess = tf.Session(config=session_conf)
         with sess.as_default():
 
-            cnn_rnn = TextCNN(
+            cnn_rnn = TextCNNRNN(
                 embedding_mat=embedding_mat,
                 sequence_length=x_train.shape[1],
                 num_classes=y_train.shape[1],
@@ -134,12 +137,15 @@ def train_cnn_rnn():
                     cnn_rnn.pad: np.zeros([len(x_batch), 1, params['embedding_dim'], 1]),
                     cnn_rnn.real_len: real_len(x_batch),
                 }
-                summaries, step, loss, accuracy, num_correct, predictions = sess.run(
-                    [dev_summary_op, global_step, cnn_rnn.loss, cnn_rnn.accuracy, cnn_rnn.num_correct, cnn_rnn.predictions],
+                summaries, step, loss, accuracy, scores = sess.run(
+                    [dev_summary_op, global_step, cnn_rnn.loss, cnn_rnn.accuracy, cnn_rnn.scores],
                     feed_dict)
+                for threshold in [0.00, 0.15, 0.20, 0.25, 0.30, 0.35,0.40]:
+                    result = CalculateFM(scores, y_batch, threshold)
+                    print(str(threshold), ":", result)
                 dev_summary_writer.add_summary(summaries, step)
-                print("step {}, loss {:g}, acc {:g}".format(step, loss, accuracy))
-                return accuracy, predictions
+                print("step {}, loss {:g}".format(step, loss))
+                return accuracy
 
             sess.run(tf.global_variables_initializer())
 
@@ -156,14 +162,15 @@ def train_cnn_rnn():
 
                 # Evaluate the model with x_dev and y_dev
                 if current_step % params['evaluate_every'] == 0:
+                    # print("Evaluation:", end=' ')
                     print("Evaluation:", end=' ')
                     _ = dev_step(x_dev, y_dev)
                     print("Test:", end=' ')
-                    acc_tmp, pred__ = dev_step(x_test, y_test)
-                    with open('results/prediction' + str(current_step), 'bw') as f:
-                        pickle.dump(pred__, f)
-                    if acc_tmp > best_accuracy:
-                        best_accuracy = acc_tmp
+                    acc_tmp = dev_step(x_test, y_test)
+                    # with open('results/prediction' + str(current_step), 'bw') as f:
+                    #     pickle.dump(pred__, f)
+                    # if acc_tmp > best_accuracy:
+                    #     best_accuracy = acc_tmp
                     print('best accuracy is', best_accuracy)
             print('Training is complete, testing the best model on x_test and y_test')
 

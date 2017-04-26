@@ -11,15 +11,11 @@ from collections import Counter
 import logging
 from gensim.models import word2vec
 import gensim
-
+from preprocess_twitter import twitter_tokenize
 # logging.getLogger().setLevel(logging.INFO)
 import re
 import nltk
-
-
-
-
-
+import csv
 
 def sentence_to_word_list(a_review):
     # Use regular expressions to do a find-and-replace
@@ -28,7 +24,6 @@ def sentence_to_word_list(a_review):
     words = []
     for word in tmp:
         words.extend(clean_str(word).split())
-
     return words
 
 
@@ -122,10 +117,30 @@ def remove_punctuation(s):
     s = re.sub(r"[^A-Za-z0-9]", " ", s)
     return s.strip().lower()
 
+#model = gensim.models.KeyedVectors.load_word2vec_format('feature/GoogleNews-vectors-negative300.bin', binary=True)
 
-def load_pretrain_word2vec(vocabulary):
-    model = gensim.models.KeyedVectors.load_word2vec_format('feature/GoogleNews-vectors-negative300.bin', binary=True)
-    embed_dict = model.vocab
+def load_pretrain_word2vec(vocabulary, embedding_option, emb_dim):
+    if embedding_option == "word2vec":
+        print('Loading word2vec word embedding')
+        with open('feature/word2vecModel', 'br') as f:
+            model = pickle.load(f)
+        embed_dict = model.vocab
+    elif embedding_option == "glove":
+        print('Loading glove word embedding')
+        with open('feature/gloveModel', 'br') as f:
+            model = pickle.load(f)
+        embed_dict = model.vocab
+    elif embedding_option == "glovetwitter":
+        print('Loading glovetwitter word embedding')
+        with open('feature/glove_twitter.27B.200d', 'br') as f:
+            model = pickle.load(f)
+        embed_dict = model.vocab
+    elif embedding_option == "fasttext":
+        print('Loading fasttext word embedding')
+        with open('feature/fasttextModel', 'br') as f:
+            model = pickle.load(f)
+        embed_dict = model.vocab
+
     word_embeddings = {}
     num_oov = 0
     for word in vocabulary:
@@ -135,7 +150,7 @@ def load_pretrain_word2vec(vocabulary):
 
         else:
             num_oov += 1
-            word_embeddings[word] = np.random.uniform(-1, 1, 300)
+            word_embeddings[word] = np.random.uniform(-1, 1, emb_dim)
     print('Numb of oov is', num_oov)
     return word_embeddings
 
@@ -147,51 +162,8 @@ def load_random_word2vec(vocabulary):
     return word_embeddings
 
 
-def load_my_word2vec(vocabulary):
-    model_name = os.path.join('feature', 'imdb_cbow_word2vec')
-    model = word2vec.Word2Vec.load(model_name)
-    embed_dict = model.wv.vocab
-    word_embeddings = {}
-    num_oov = 0
-    for word in vocabulary:
-        if word in embed_dict:
-            vec = model.wv.syn0[embed_dict[word].index]
-            word_embeddings[word] = (vec - min(vec)) / np.add(max(vec), -min(vec)) * 2 - 1
 
-        else:
-            num_oov += 1
-            word_embeddings[word] = np.random.uniform(-1, 1, 300)
-    print('Numb of oov is', num_oov)
-    return word_embeddings
-
-
-def load_senti_emb(vocabulary):
-    pretrained_word2vec_embbeding = load_word2vec(vocabulary)
-
-    sent_emb_dict = {}
-    with open('feature/-round-431', 'r') as f:
-        for line in f.readlines():
-            line = line.split()
-            word = line[0]
-            vector = [np.float32(x) for x in line[1:]]
-            sent_emb_dict[word] = vector
-
-    word_embeddings = {}
-    num_oov = 0
-    for word in vocabulary:
-        if word in sent_emb_dict:
-            vec = sent_emb_dict[word]
-            word_embeddings[word] = (vec - min(vec)) / np.add(max(vec), -min(vec)) * 2 - 1
-        elif word in pretrained_word2vec_embbeding:
-            word_embeddings[word] = pretrained_word2vec_embbeding[word]
-        else:
-            num_oov += 1
-            word_embeddings[word] = np.random.uniform(-1, 1, 300)
-    print('Numb of oov is', num_oov)
-    return word_embeddings
-
-
-def load_embeddings(vocabulary):
+def load_embeddings(vocabulary, embedding_option='word2vec', emb_dim=300):
     # Sentiment embedding
     # emb_dict ={}
     # with open('feature/senti_emb_20.txt', 'r') as f:
@@ -200,7 +172,7 @@ def load_embeddings(vocabulary):
 
     # word2vec embedding
     # if embedding == 'cbow':
-    word_embeddings = load_senti_emb(vocabulary)
+    word_embeddings = load_pretrain_word2vec(vocabulary, embedding_option, emb_dim)
 
     # word2vec model
 
@@ -258,27 +230,48 @@ def batch_iter(data, batch_size, num_epochs, shuffle=True):
 
 
 # file_list = ['emotion.neg.0.txt', 'emotion.pos.0.txt']
+def load_twitter_data():
+    with open('others/train_test_ids_31k.pkl', 'br') as f:
+        train_ids, test_ids = pickle.load(f)
+    num_classes = 9
+    data_path = 'data'
+    #file_list = ['CBET-double.csv', 'CBET-single.csv']
+    file_list = ['mixed.csv']
+    __data = []
+    __label = []
+    for file in file_list:
+        bow_file = os.path.join(data_path, file)
+        with open(bow_file, newline='', encoding='ISO-8859-1') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter='\t')
+
+            for row in spamreader:
+                id = row[0]
+                if id in train_ids or id in test_ids:
+                    sent = row[1]
+                    sent = clean_str(sent).split()
+                    tmp = row[2:]
+                    tmp = [i for i in tmp if i != '']
+                    vector = [int(x) for x in tmp]
+                    __data.append(sent)
+                    tmp = [1 & (i in vector) for i in range(num_classes)]
+                    __label.append(tmp)
+    return __data, __label
 
 
 def load_data():
-    x_raw, y_raw = load_imdb()
+    x_raw, y_raw = load_twitter_data()
+    print(len(x_raw))
     x_raw, sequence_length = pad_sentences(x_raw)
     vocabulary, vocabulary_inv = build_vocab(x_raw)
 
-    x_train_dev, y_train_dev = load_imdb_train()
-    x_train_dev, _ = pad_sentences(x_train_dev, given_pad_len=sequence_length)
-    x = np.array([[vocabulary[word] for word in sentence] for sentence in x_train_dev])
-    y = np.array(y_train_dev)
+    x = np.array([[vocabulary[word] for word in sentence] for sentence in x_raw])
+    y = np.array(y_raw)
 
-    x_test, y_test = load_imdb_test()
-    x_test, _ = pad_sentences(x_test, given_pad_len=sequence_length)
-    x_test = np.array([[vocabulary[word] for word in sentence] for sentence in x_test])
-    y_test = np.array(y_test)
 
     labels = ['negative', 'positive']
-    return x, y, x_test, y_test, vocabulary, vocabulary_inv, labels
+    return x, y, vocabulary, vocabulary_inv, labels
 
 
 if __name__ == "__main__":
-    train_word2vec()
+    load_data()
 
