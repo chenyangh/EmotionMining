@@ -10,5 +10,5 @@
     "non_static": false,
     "num_epochs": 5,
     "num_filters": 256,
-    "embedding": "word2vec"
+    "embedding": "fasttext"
 }

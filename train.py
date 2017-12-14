@@ -1,4 +1,6 @@
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+
 import sys
 import json
 import time
@@ -15,7 +17,6 @@ import datetime
 import pickle
 from measurements import CalculateFM
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 def train_cnn_rnn():
     x_, y_, vocabulary, vocabulary_inv, labels = data_helper.load_data()

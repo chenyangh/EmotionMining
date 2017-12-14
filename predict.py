@@ -100,7 +100,7 @@ def predict_unseen_data():
                 return [np.ceil(np.argmin(batch + [0]) * 1.0 / params['max_pool_size']) for batch in batches]
 
             def predict_step(x_batch):
-                feed_dict = {
+                feed_dict =                                                                                              {
                     cnn_rnn.input_x: x_batch,
                     cnn_rnn.dropout_keep_prob: 1.0,
                     cnn_rnn.batch_size: len(x_batch),

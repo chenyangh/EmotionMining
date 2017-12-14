@@ -21,6 +21,11 @@ Structure
 |   +-- glove_twitter.27B.200d # glove on twitter
 +-- data
 |   +-- mixed.csv
+|   +-- integer_labels.csv
+|   +-- bipolar_labels.csv
+|   +-- binary_labels.csv
+|   +-- Presence_Vector_31k_test.csv
+|   +-- Presence_vector_31k_train.csv
 |-- others
 |   +-- train_test_ids_4k.pkl
 |   +-- train_test_ids_31k.pkl
@@ -58,9 +63,10 @@ An example of setting is,
     "non_static": false,
     "num_epochs": 5,
     "num_filters": 256,
-    "embedding": "word2vec"
+    "embedding": "fasttext"
 }
 ```
 option of embedding including 'word2vec', 'glove', 'fasttext' and 'glovetwitter'. Note that except for 'glovetwitter', 
 or other embeddings are 300 dimensional. Need to change 'embedding_dim' to 200 before using 'glovetwitter'.
+
 
